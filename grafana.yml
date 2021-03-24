@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  ports:
+    - port: 3000
+      nodePort: 31002
+  selector:
+    app: grafana
+    type: monitoring-tool
+  type: NodePort
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graf-pvc
+  labels:
+    app: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+
+---
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: grafana
+spec:
+    replicas: 1
+    selector:
+          matchLabels:
+              app: grafana
+    template:
+        metadata:
+            name: grafana
+            labels:
+                app: grafana
+                type: monitoring-tool
+        spec:
+            containers:
+                - name: grafana
+                  image: vimal13/grafana
+                  volumeMounts: 
+                      - name: graf-vol
+                        mountPath: /var/lib/grafana
+            volumes:
+                - name: graf-vol
+                  persistentVolumeClaim: 
+                      claimName: graf-pvc
